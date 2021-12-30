@@ -1,0 +1,1 @@
+The file is a Go practice project.
