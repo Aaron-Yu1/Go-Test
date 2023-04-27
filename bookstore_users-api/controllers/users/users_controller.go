@@ -1,12 +1,12 @@
 package users
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/Aaron-Yu1/Go-Test/bookstore_users-api/domain/users"
+	"github.com/Aaron-Yu1/Go-Test/bookstore_users-api/services"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,20 +18,26 @@ func GetUser(c *gin.Context) {
 func CreateUser(c *gin.Context) {
 	var user users.User
 
-	bytes, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		//TODO: Handle error
+	if err := c.ShouldBindJSON(&user); err != nil {
+
+		restErr := errors.RestErr{
+			Message: "invalid json body.",
+			Status:  http.StatusBadRequest,
+			Error:   "bad request.",
+		}
+
+		c.JSON(restErr.Status, restErr)
+
+		fmt.Println(err)
+		//TOD: retun bad requset to the caller
 		return
 	}
-	if err := json.Unmarshal(bytes, &user); err != nil {
-		fmt.Println(err.Error())
-		//TODO: Handle json error
+
+	result, saveErr := services.CreateUser(user)
+	if saveErr != nil {
+		//TODO: Handle user creation error
 		return
 	}
 
-	result saveErr := services.CreateUser()
-
-	fmt.Println(user)
-
-	c.String(http.StatusNotImplemented, "implement me!")
+	c.JSON(http.StatusCreated, result)
 }
